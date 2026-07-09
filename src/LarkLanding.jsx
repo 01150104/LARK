@@ -628,14 +628,14 @@ A World Ruled by Probability
 
 function Opening({ onDone }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 2800);
+    const t = setTimeout(onDone, 1600);
     return () => clearTimeout(t);
   }, [onDone]);
 
   return (
     <motion.div
       animate={{ opacity: [1, 1, 0] }}
-      transition={{ duration: 2.8, times: [0, 0.82, 1], ease: EASE }}
+      transition={{ duration: 1.6, times: [0, 0.75, 1], ease: EASE }}
       style={{
         position: "fixed",
         inset: 0,
@@ -649,8 +649,8 @@ function Opening({ onDone }) {
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: [0, 1, 1, 0], scale: [0.85, 1, 1, 1] }}
-        transition={{ duration: 1.6, times: [0, 0.3, 0.75, 1], ease: EASE }}
+        animate={{ opacity: [0, 1, 1, 0], scale: [0.85, 1, 1, 1.1] }}
+        transition={{ duration: 1.4, times: [0, 0.3, 0.7, 1], ease: EASE }}
         style={{
           position: "absolute",
           fontFamily: "'Cinzel Decorative','Cinzel',serif",
@@ -664,20 +664,6 @@ function Opening({ onDone }) {
         }}
       >
         LARK
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1, 1, 32] }}
-        transition={{ duration: 1.4, delay: 1.2, times: [0, 0.15, 0.75, 1], ease: EASE }}
-        style={{
-          position: "absolute",
-          fontSize: 120,
-          color: "#ffd75e",
-          textShadow: "0 0 60px rgba(255,215,94,0.85), 0 0 120px rgba(255,215,94,0.5)",
-        }}
-      >
-        ♠
       </motion.div>
     </motion.div>
   );
