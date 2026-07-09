@@ -1,0 +1,53 @@
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #030303;
+}
+
+#root {
+  width: 100%;
+  min-height: 100svh;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* custom scrollbar — hairline, single muted accent, no gradient */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(205, 168, 106, 0.35);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(205, 168, 106, 0.55);
+}
+
+::selection {
+  background: rgba(205, 168, 106, 0.28);
+  color: #fff;
+}
