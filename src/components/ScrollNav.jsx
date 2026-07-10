@@ -67,7 +67,7 @@ export default function ScrollNav({ sections }) {
                 width: isActive ? 8 : 6,
                 height: isActive ? 8 : 6,
                 borderRadius: 0,
-                background: isActive ? THEME.accent : "transparent",
+                background: isActive ? THEME.accent : "rgba(231,231,226,0.35)",
                 border: `2px solid ${isActive ? THEME.accent : "rgba(231,231,226,0.4)"}`,
                 transition: "all 0.3s ease",
                 flexShrink: 0,
