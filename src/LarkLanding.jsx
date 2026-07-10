@@ -518,8 +518,11 @@ export default function LarkLanding() {
                 </motion.div>
               </motion.div>
 
-              {/* avatar row + prev/next — its own box, outside the story panel */}
-              <div
+              {/* avatar row + prev/next — its own box, outside the story panel.
+                  same float as the story panel, just 0.1s behind it */}
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 5, delay: 0.1, repeat: Infinity, ease: "easeInOut" }}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -582,7 +585,7 @@ export default function LarkLanding() {
                 >
                   ›
                 </button>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         </AnimatePresence>
