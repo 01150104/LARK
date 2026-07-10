@@ -815,11 +815,24 @@ function Opening({ onDone }) {
 function NavLink({ href, label, external = false, color }) {
   const [hover, setHover] = useState(false);
   const baseColor = color || THEME.muted;
+  // "#hero" is a no-op for the browser's native anchor scroll: the hero
+  // section is position:fixed, so it never actually leaves the viewport,
+  // and browsers can decide no scrolling is needed to "reveal" it — jump
+  // to the top manually instead of relying on the anchor
+  const isHome = href === "#hero";
   return (
     <a
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
+      onClick={
+        isHome
+          ? (e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          : undefined
+      }
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{

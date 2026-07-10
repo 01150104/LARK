@@ -45,6 +45,14 @@ export default function ScrollNav({ sections }) {
           <a
             key={id}
             href={`#${id}`}
+            onClick={
+              id === "hero"
+                ? (e) => {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                : undefined
+            }
             style={{
               display: "flex",
               alignItems: "center",
