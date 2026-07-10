@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import ImageSlot from "./components/ImageSlot";
 import ScrollNav from "./components/ScrollNav";
 import { THEME, FONT_PIXEL, FONT_ARCADE, HERO_IMG, CHAR_DATA, IN_GAME_SHOTS } from "./data/larkData";
 
 const SECTIONS = [
   { id: "hero", label: "HOME" },
+  { id: "story", label: "STORY" },
   { id: "characters", label: "CHARACTERS" },
   { id: "ingame", label: "IN-GAME" },
 ];
@@ -25,7 +26,7 @@ const stagger = {
 export default function LarkLanding() {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selected = CHAR_DATA[selectedIdx];
-  const heroRef = useRef(null);
+  const storyRef = useRef(null);
   const [scrolled, setScrolled] = useState(false);
   const [shotIdx, setShotIdx] = useState(0);
   const [showIntro, setShowIntro] = useState(true);
@@ -54,14 +55,32 @@ export default function LarkLanding() {
     });
   }, []);
 
+  // laser-pointer cursor: a small glowing dot that chases the real cursor
+  // with a bit of spring lag, rather than snapping to it 1:1
+  const mouseX = useMotionValue(-100);
+  const mouseY = useMotionValue(-100);
+  const laserX = useSpring(mouseX, { damping: 22, stiffness: 260, mass: 0.4 });
+  const laserY = useSpring(mouseY, { damping: 22, stiffness: 260, mass: 0.4 });
+
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      mouseX.set(e.clientX - 7);
+      mouseY.set(e.clientY - 7);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    return () => window.removeEventListener("mousemove", onMouseMove);
+  }, [mouseX, mouseY]);
+
   const { scrollYProgress: pageProgress } = useScroll();
-  const { scrollYProgress: heroProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
+
+  // hero is pinned (position: fixed) and never itself moves or fades —
+  // instead the Story section slides up from below and covers it, going
+  // from translucent to fully opaque exactly as it finishes covering the screen
+  const { scrollYProgress: storyScrollProgress } = useScroll({
+    target: storyRef,
+    offset: ["start end", "start start"],
   });
-  const heroVisualY = useTransform(heroProgress, [0, 1], [0, 90]);
-  const heroVisualScale = useTransform(heroProgress, [0, 1], [1, 1.06]);
-  const heroFade = useTransform(heroProgress, [0, 0.8], [1, 0]);
+  const storyOverlayOpacity = useTransform(storyScrollProgress, [0, 1], [0.15, 1]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -82,6 +101,25 @@ export default function LarkLanding() {
       <GlobalStyle />
 
       <AnimatePresence>{showIntro && <Opening onDone={() => setShowIntro(false)} />}</AnimatePresence>
+
+      {/* laser-pointer cursor follower */}
+      <motion.div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          x: laserX,
+          y: laserY,
+          width: 14,
+          height: 14,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #ff3b44 0%, rgba(255,59,68,0.65) 45%, transparent 75%)",
+          boxShadow: "0 0 18px 5px rgba(255,59,68,0.55), 0 0 40px 14px rgba(255,59,68,0.22)",
+          zIndex: 300,
+          pointerEvents: "none",
+          mixBlendMode: "screen",
+        }}
+      />
 
       {/* scroll progress — single hairline, no gradient */}
       <motion.div
@@ -121,7 +159,7 @@ export default function LarkLanding() {
           <span
             style={{
               fontFamily: FONT_ARCADE,
-              fontSize: 14,
+              fontSize: 24,
               letterSpacing: 2,
               color: THEME.ink,
             }}
@@ -130,6 +168,7 @@ export default function LarkLanding() {
           </span>
         </a>
         <nav style={{ display: "flex", gap: "clamp(20px, 3vw, 44px)" }}>
+          <NavLink href="https://github.com/01150104" label="CONTACT" external color={THEME.accent} />
           {SECTIONS.map((s) => (
             <NavLink key={s.id} href={`#${s.id}`} label={s.label} />
           ))}
@@ -138,32 +177,118 @@ export default function LarkLanding() {
 
       <ScrollNav sections={SECTIONS} />
 
-      {/* ================= SECTION 1: HERO ================= */}
-      <section
-        id="hero"
-        ref={heroRef}
+      {/* ================= SECTION 1: HERO (HOME) ================= */}
+      {/* pinned via position:fixed and filled edge-to-edge by the key art —
+          it never scrolls or fades on its own. the spacer div right after it
+          reserves one viewport of scroll distance, and Story (which follows)
+          slides up over it, going translucent → opaque as it arrives. */}
+      <section id="hero" style={{ position: "fixed", inset: 0, zIndex: 1, overflow: "hidden" }}>
+        <ImageSlot
+          src={HERO_IMG}
+          alt="LARK main visual"
+          label="MAIN VISUAL"
+          hint="主人公 七野七海 イラスト · 화면 전체를 채우는 풀블리드, 1920×1080 이상 권장"
+          aspectRatio="auto"
+          radius={0}
+          fit="cover"
+          style={{ height: "100%" }}
+        />
+
+        {/* legibility gradient so the logo/scroll-cue read over any art */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 62%, rgba(0,0,0,0.65) 100%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        <EmberParticles />
+        <FloatingSuits />
+
+        {/* title overlay */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 24px",
+            pointerEvents: "none",
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, delay: 0.2, ease: EASE }}
+            style={{
+              fontFamily: FONT_ARCADE,
+              fontSize: "clamp(56px, 12vw, 150px)",
+              lineHeight: 1,
+              letterSpacing: 2,
+              color: THEME.ink,
+              textShadow: `4px 0 0 ${THEME.accent}, -4px 0 0 #2a8fa0`,
+              animation: "glitchFlicker 6s ease-in-out infinite",
+            }}
+          >
+            LARK
+          </motion.div>
+        </div>
+
+        {/* scroll cue */}
+        <motion.a
+          href="#story"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1 }}
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: "clamp(28px, 5vh, 48px)",
+            transform: "translateX(-50%)",
+            zIndex: 2,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 10,
+            textDecoration: "none",
+            color: THEME.muted,
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontFamily: FONT_ARCADE, fontSize: 9, letterSpacing: 1 }}>SCROLL</span>
+          <span style={{ position: "relative", width: 2, height: 30, background: THEME.hairline, overflow: "hidden" }}>
+            <motion.span
+              animate={{ y: [-30, 30] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              style={{ position: "absolute", left: -1, width: 3, height: 12, background: THEME.accent }}
+            />
+          </span>
+        </motion.a>
+      </section>
+
+      {/* scroll-space spacer for the fixed hero above */}
+      <div style={{ height: "100dvh" }} />
+
+      {/* ================= SECTION 2: STORY ================= */}
+      <motion.section
+        id="story"
+        ref={storyRef}
         style={{
           position: "relative",
+          zIndex: 2,
           minHeight: "100dvh",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "140px 24px 90px",
+          padding: "120px 24px",
           background: `radial-gradient(ellipse 60% 50% at 50% 8%, rgba(200,48,60,0.14), transparent 65%), linear-gradient(180deg, ${THEME.bgDeep} 0%, ${THEME.bg} 55%, ${THEME.bgDeep} 100%)`,
           overflow: "hidden",
+          opacity: storyOverlayOpacity,
         }}
       >
-        <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: 0.5,
-              background: "radial-gradient(ellipse 45% 35% at 25% 25%, rgba(200,48,60,0.10), transparent 70%)",
-              animation: "driftGlow 26s ease-in-out infinite",
-              pointerEvents: "none",
-            }}
-          />
         <div
           style={{
             position: "absolute",
@@ -173,161 +298,62 @@ export default function LarkLanding() {
             pointerEvents: "none",
           }}
         />
-        <EmberParticles />
         <FloatingSuits />
 
-        <motion.div style={{ opacity: heroFade, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.5 }}
+          style={{ position: "relative", zIndex: 2, maxWidth: 680, textAlign: "center" }}
+        >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.75 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            style={{
-              position: "relative",
-              zIndex: 2,
-              fontFamily: FONT_PIXEL,
-              fontSize: 13,
-              letterSpacing: 3,
-              color: THEME.accent,
-              textTransform: "uppercase",
-            }}
+            variants={fadeUp}
+            style={{ fontFamily: FONT_PIXEL, fontSize: 13, letterSpacing: 3, color: THEME.accent, textTransform: "uppercase", marginBottom: 22 }}
           >
             A World Ruled by Probability
           </motion.div>
-
-          <div style={{ position: "relative", zIndex: 2, textAlign: "center", marginTop: 22, width: "100%" }}>
-            <motion.div
-              initial={{ opacity: 0, y: 26 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.1, delay: 0.15, ease: EASE }}
-              style={{
-                fontFamily: FONT_ARCADE,
-                fontSize: "clamp(40px, 9vw, 108px)",
-                lineHeight: 1.1,
-                letterSpacing: 2,
-                color: THEME.ink,
-                textShadow: `3px 0 0 ${THEME.accent}, -3px 0 0 #2a8fa0`,
-                animation: "glitchFlicker 6s ease-in-out infinite",
-              }}
-            >
-              LARK
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.55 }}
-              style={{
-                fontFamily: FONT_PIXEL,
-                fontSize: "clamp(12px,1.6vw,15px)",
-                letterSpacing: 1,
-                color: THEME.muted,
-                marginTop: 16,
-              }}
-            >
-              確率と運命の国フォルトゥナ — A Roguelike Roulette &amp; Dice Battle
-            </motion.div>
-          </div>
-
-          {/* main visual */}
           <motion.div
+            variants={fadeUp}
             style={{
-              y: heroVisualY,
-              scale: heroVisualScale,
-              position: "relative",
-              zIndex: 2,
-              width: "min(74vw, 1020px)",
-              maxWidth: "94vw",
-              marginTop: "clamp(40px, 5vw, 64px)",
-            }}
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, delay: 0.35, ease: EASE }}
-          >
-            <div style={{ position: "relative", border: `3px solid ${THEME.ink}`, boxShadow: `0 0 0 3px ${THEME.bgDeep}, 0 0 0 5px ${THEME.accent}` }}>
-              <ImageSlot
-                src={HERO_IMG}
-                alt="LARK main visual"
-                label="MAIN VISUAL"
-                hint="主人公 七野七海 イラスト · 1920×1200 권장"
-                aspectRatio="16 / 9"
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: `linear-gradient(180deg, transparent 55%, ${THEME.bgDeep} 100%)`,
-                  pointerEvents: "none",
-                }}
-              />
-            </div>
-          </motion.div>
-
-          {/* catchphrase */}
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.6 }}
-            style={{ position: "relative", zIndex: 2, maxWidth: 640, textAlign: "center", marginTop: "clamp(36px,5vw,56px)" }}
-          >
-            <motion.div
-              variants={fadeUp}
-              style={{
-                fontFamily: FONT_PIXEL,
-                fontSize: "clamp(16px,2vw,20px)",
-                letterSpacing: 0.5,
-                color: THEME.accent,
-                fontWeight: 700,
-                marginBottom: 20,
-              }}
-            >
-              「賭けるべき時、降りるべき時——それを見極めよ。」
-            </motion.div>
-            <motion.div variants={fadeUp} style={{ fontSize: "clamp(13.5px,1.4vw,15px)", lineHeight: 2, color: THEME.muted, fontWeight: 300 }}>
-              すべての力が「確率」によって動く世界、フォルトゥナ。
-              「必然の魔王」が現れて確率を書き換え、住民たちは悪い結果しか出ない呪いにかかり、村は魔王の部下に侵略された。
-              <br />
-              運命がすでに固定されたこの世界で、ただ一人——異邦人<b style={{ color: THEME.ink, fontWeight: 500 }}>七野七海</b>の運命だけがまだ定まっていない。
-              魔王を討伐できる資格を持つのは、彼女だけだ。
-              <br />
-              ルーレットとダイスを手に、七海は村を一つずつ解放していく——死線の戦場で、本物のギャンブルを学びながら。
-            </motion.div>
-          </motion.div>
-
-          <motion.a
-            href="#characters"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1 }}
-            style={{
-              position: "relative",
-              zIndex: 2,
-              marginTop: "clamp(40px,5vw,56px)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 10,
-              textDecoration: "none",
-              color: THEME.muted,
-              cursor: "pointer",
+              fontFamily: FONT_PIXEL,
+              fontSize: "clamp(18px,2.1vw,22px)",
+              letterSpacing: 0.5,
+              color: THEME.accent,
+              fontWeight: 700,
+              marginBottom: 24,
             }}
           >
-            <span style={{ fontFamily: FONT_ARCADE, fontSize: 9, letterSpacing: 1 }}>SCROLL</span>
-            <span style={{ position: "relative", width: 2, height: 30, background: THEME.hairline, overflow: "hidden" }}>
-              <motion.span
-                animate={{ y: [-30, 30] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                style={{ position: "absolute", left: -1, width: 3, height: 12, background: THEME.accent }}
-              />
-            </span>
-          </motion.a>
+            「賭けるべき時、降りるべき時——それを見極めよ。」
+          </motion.div>
+          <motion.div variants={fadeUp} style={{ fontSize: "clamp(14px,1.5vw,16px)", lineHeight: 1.95, color: THEME.muted, fontWeight: 300 }}>
+            すべての力が「確率」によって動く世界、フォルトゥナ。
+            <br />
+            「必然の魔王」が現れて確率を書き換え、住民たちは悪い結果しか出ない呪いにかかり、
+            <br />
+            村は魔王の部下に侵略された。
+            <br />
+            <br />
+            運命がすでに固定されたこの世界で、
+            <br />
+            ただ一人——異邦人<b style={{ color: THEME.ink, fontWeight: 500 }}>七野七海</b>の運命だけがまだ定まっていない。
+            <br />
+            魔王を討伐できる資格を持つのは、彼女だけだ。
+            <br />
+            <br />
+            ルーレットとダイスを手に、七海は村を一つずつ解放していく——死線の戦場で、
+            <br />
+            本物のギャンブルを学びながら。
+          </motion.div>
         </motion.div>
-      </section>
+      </motion.section>
 
-      {/* ================= SECTION 2: CHARACTERS ================= */}
+      {/* ================= SECTION 3: CHARACTERS ================= */}
       <section
         id="characters"
         style={{
           position: "relative",
+          zIndex: 2,
           minHeight: "100dvh",
           background: THEME.bgDeep,
           overflow: "hidden",
@@ -341,7 +367,7 @@ export default function LarkLanding() {
               initial={{ opacity: 0, scale: 1.04 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, ease: EASE }}
-              style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(70%, 1400px)" }}
+              style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(85%, 1600px)" }}
             >
               {/* idle float + drop-shadow — reads as the character "standee"
                   floating above the background rather than flat against it */}
@@ -414,8 +440,11 @@ export default function LarkLanding() {
                 left: "clamp(20px, 4vw, 64px)",
                 top: "50%",
                 transform: "translateY(-50%)",
-                width: "min(880px, 84vw)",
+                width: "min(456px, 80vw)",
                 zIndex: 2,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
               }}
             >
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1, ease: EASE }}>
@@ -425,7 +454,7 @@ export default function LarkLanding() {
                   animate={{ y: [0, -6, 0] }}
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                   style={{
-                    maxHeight: "calc(100dvh - 120px)",
+                    maxHeight: "calc(100dvh - 200px)",
                     overflowY: "auto",
                     border: `3px solid ${THEME.ink}`,
                     boxShadow: `0 0 0 3px ${THEME.bgDeep}, 0 0 0 6px ${selected.accent}`,
@@ -486,8 +515,21 @@ export default function LarkLanding() {
                 </div>
               </div>
 
-              {/* avatar row + prev/next, anchored to the bottom of the same panel */}
-              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 32px", borderTop: `2px solid ${THEME.hairline}` }}>
+                </motion.div>
+              </motion.div>
+
+              {/* avatar row + prev/next — its own box, outside the story panel */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "12px 18px",
+                  border: `3px solid ${THEME.ink}`,
+                  boxShadow: `0 0 0 3px ${THEME.bgDeep}, 0 0 0 6px ${selected.accent}`,
+                  background: "#0a0a0a",
+                }}
+              >
                 <button
                   onClick={() => setSelectedIdx((selectedIdx - 1 + CHAR_DATA.length) % CHAR_DATA.length)}
                   style={{ background: "none", border: "none", color: THEME.muted, fontSize: 20, cursor: "pointer", padding: 4, flexShrink: 0 }}
@@ -541,18 +583,17 @@ export default function LarkLanding() {
                   ›
                 </button>
               </div>
-                </motion.div>
-              </motion.div>
             </div>
           </motion.div>
         </AnimatePresence>
       </section>
 
-      {/* ================= SECTION 3: IN-GAME SCREENS ================= */}
+      {/* ================= SECTION 4: IN-GAME SCREENS ================= */}
       <section
         id="ingame"
         style={{
           position: "relative",
+          zIndex: 2,
           padding: "clamp(90px,10vw,150px) clamp(20px,4vw,64px) 100px",
           background: THEME.bgDeep,
           overflow: "hidden",
@@ -727,11 +768,14 @@ function Opening({ onDone }) {
   );
 }
 
-function NavLink({ href, label }) {
+function NavLink({ href, label, external = false, color }) {
   const [hover, setHover] = useState(false);
+  const baseColor = color || THEME.muted;
   return (
     <a
       href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -739,7 +783,7 @@ function NavLink({ href, label }) {
         fontFamily: FONT_ARCADE,
         fontSize: 10,
         letterSpacing: 1,
-        color: hover ? THEME.ink : THEME.muted,
+        color: hover ? THEME.ink : baseColor,
         textDecoration: "none",
         paddingBottom: 6,
         transition: "color 0.25s ease",
@@ -839,7 +883,7 @@ function FloatingSuits() {
             position: "absolute",
             left: `${(i * 19 + 6) % 100}%`,
             bottom: `${(i * 23) % 65}%`,
-            fontSize: 12 + (i % 3) * 6,
+            fontSize: 34 + (i % 3) * 16,
             color: "#e0303c",
             lineHeight: 1,
             textShadow: "0 0 8px rgba(224,48,60,0.6)",
