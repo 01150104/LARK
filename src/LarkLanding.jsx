@@ -88,6 +88,18 @@ export default function LarkLanding() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // below this width the Characters section switches from "art on the right,
+  // panel overlaid on the left" to a stacked layout — on a phone the overlay
+  // panel is wide enough to cover the character entirely, so it can't overlap
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 720px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   return (
     <div
       style={{
@@ -357,17 +369,39 @@ export default function LarkLanding() {
           minHeight: "100dvh",
           background: THEME.bgDeep,
           overflow: "hidden",
+          ...(isMobile && {
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            padding: "100px 20px 40px",
+          }),
         }}
       >
         <AnimatePresence mode="wait">
-          <motion.div key={selected.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45, ease: EASE }} style={{ position: "absolute", inset: 0 }}>
-            {/* big character render, right-biased — cropping the sides/legs is fine,
-                the point is scale: this is the dominant visual of the section */}
+          <motion.div
+            key={selected.name}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: EASE }}
+            style={
+              isMobile
+                ? { width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }
+                : { position: "absolute", inset: 0 }
+            }
+          >
+            {/* big character render — right-biased & overlaid by the panel on
+                desktop; stacked full-width above the panel on mobile so the
+                panel never has to cover it to fit */}
             <motion.div
               initial={{ opacity: 0, scale: 1.04 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, ease: EASE }}
-              style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(85%, 1600px)" }}
+              style={
+                isMobile
+                  ? { position: "relative", width: "100%", height: "42vh" }
+                  : { position: "absolute", top: 0, right: 0, bottom: 0, width: "min(85%, 1600px)" }
+              }
             >
               {/* idle float + drop-shadow — reads as the character "standee"
                   floating above the background rather than flat against it */}
@@ -420,32 +454,39 @@ export default function LarkLanding() {
               />
             </motion.div>
 
-            {/* blend the art's left edge into the panel side */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: `linear-gradient(90deg, ${THEME.bgDeep} 0%, ${THEME.bgDeep}aa 24%, transparent 46%)`,
-                pointerEvents: "none",
-              }}
-            />
+            {/* blend the art's left edge into the panel side — only relevant
+                to the desktop overlay layout, not the mobile stacked one */}
+            {!isMobile && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: `linear-gradient(90deg, ${THEME.bgDeep} 0%, ${THEME.bgDeep}aa 24%, transparent 46%)`,
+                  pointerEvents: "none",
+                }}
+              />
+            )}
 
             {/* single glass panel: header + story + avatar row, centered on the screen.
                 positioning is a plain (unanimated) div so the entrance fade and the
                 continuous idle bob below don't have to fight a static translateY(-50%)
                 for control of `transform`. */}
             <div
-              style={{
-                position: "absolute",
-                left: "clamp(20px, 4vw, 64px)",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "min(456px, 80vw)",
-                zIndex: 2,
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-              }}
+              style={
+                isMobile
+                  ? { position: "relative", width: "100%", maxWidth: 460, margin: "0 auto", zIndex: 2, display: "flex", flexDirection: "column", gap: 16 }
+                  : {
+                      position: "absolute",
+                      left: "clamp(20px, 4vw, 64px)",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: "min(456px, 80vw)",
+                      zIndex: 2,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 16,
+                    }
+              }
             >
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1, ease: EASE }}>
                 {/* gentle continuous float — noticeable, but small enough that the
@@ -454,8 +495,8 @@ export default function LarkLanding() {
                   animate={{ y: [0, -6, 0] }}
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                   style={{
-                    maxHeight: "calc(100dvh - 200px)",
-                    overflowY: "auto",
+                    maxHeight: isMobile ? "none" : "calc(100dvh - 200px)",
+                    overflowY: isMobile ? "visible" : "auto",
                     border: `3px solid ${THEME.ink}`,
                     boxShadow: `0 0 0 3px ${THEME.bgDeep}, 0 0 0 6px ${selected.accent}`,
                     background: "#0a0a0a",
@@ -526,8 +567,8 @@ export default function LarkLanding() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 14,
-                  padding: "12px 18px",
+                  gap: isMobile ? 8 : 14,
+                  padding: isMobile ? "10px 12px" : "12px 18px",
                   border: `3px solid ${THEME.ink}`,
                   boxShadow: `0 0 0 3px ${THEME.bgDeep}, 0 0 0 6px ${selected.accent}`,
                   background: "#0a0a0a",
@@ -540,7 +581,7 @@ export default function LarkLanding() {
                 >
                   ‹
                 </button>
-                <div style={{ display: "flex", gap: 10, flex: 1 }}>
+                <div style={{ display: "flex", gap: isMobile ? 6 : 10, flex: 1 }}>
                   {CHAR_DATA.map((char, idx) => {
                     const isActive = idx === selectedIdx;
                     return (
@@ -549,8 +590,8 @@ export default function LarkLanding() {
                         layout
                         onClick={() => setSelectedIdx(idx)}
                         style={{
-                          width: 48,
-                          height: 48,
+                          width: isMobile ? 40 : 48,
+                          height: isMobile ? 40 : 48,
                           border: `2px solid ${isActive ? char.accent : THEME.hairline}`,
                           padding: 0,
                           cursor: "pointer",
