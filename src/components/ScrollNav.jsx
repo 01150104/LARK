@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { THEME } from "../data/larkData";
 
 export default function ScrollNav({ sections }) {
   const [active, setActive] = useState(sections[0]?.id);
@@ -49,10 +50,10 @@ export default function ScrollNav({ sections }) {
           >
             <span
               style={{
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'DotGothic16', sans-serif",
                 fontSize: 10,
-                letterSpacing: 2,
-                color: isActive ? "#cda86a" : "rgba(220,212,208,0.32)",
+                letterSpacing: 1,
+                color: isActive ? THEME.accent : "rgba(231,231,226,0.32)",
                 opacity: isActive ? 1 : 0,
                 transform: isActive ? "translateX(0)" : "translateX(6px)",
                 transition: "opacity 0.3s ease, transform 0.3s ease, color 0.3s ease",
@@ -63,11 +64,11 @@ export default function ScrollNav({ sections }) {
             </span>
             <span
               style={{
-                width: isActive ? 6 : 4,
-                height: isActive ? 6 : 4,
-                borderRadius: "50%",
-                background: isActive ? "#cda86a" : "transparent",
-                border: `1px solid ${isActive ? "#cda86a" : "rgba(220,212,208,0.4)"}`,
+                width: isActive ? 8 : 6,
+                height: isActive ? 8 : 6,
+                borderRadius: 0,
+                background: isActive ? THEME.accent : "transparent",
+                border: `2px solid ${isActive ? THEME.accent : "rgba(231,231,226,0.4)"}`,
                 transition: "all 0.3s ease",
                 flexShrink: 0,
               }}

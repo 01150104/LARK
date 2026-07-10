@@ -12,7 +12,7 @@ export default function ImageSlot({
   hint,
   aspectRatio = "3 / 4",
   radius = 0,
-  accent = "#cda86a",
+  accent = "#c8303c",
   fit = "cover",
   bleed = false,
   style,
@@ -28,8 +28,8 @@ export default function ImageSlot({
         aspectRatio,
         borderRadius: radius,
         overflow: bleed ? "visible" : "hidden",
-        background: "linear-gradient(160deg, #14100f, #0a0808)",
-        border: `1px dashed ${failed ? "rgba(255,255,255,0.14)" : "transparent"}`,
+        background: "#0a0a0a",
+        border: `2px dashed ${failed ? "rgba(231,231,226,0.3)" : "transparent"}`,
         ...style,
       }}
     >
@@ -78,33 +78,31 @@ export default function ImageSlot({
         >
           <div
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              border: `1px solid ${accent}66`,
+              width: 36,
+              height: 36,
+              border: `2px solid ${accent}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 16,
+              fontSize: 15,
               color: accent,
-              opacity: 0.85,
             }}
           >
             ⚄
           </div>
           <div
             style={{
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'DotGothic16', sans-serif",
               fontSize: 11,
-              letterSpacing: 2,
-              color: "rgba(230,224,222,0.5)",
+              letterSpacing: 1,
+              color: "rgba(231,231,226,0.55)",
               textTransform: "uppercase",
             }}
           >
             {label || "IMAGE PLACEHOLDER"}
           </div>
           {hint && (
-            <div style={{ fontSize: 10, color: "rgba(200,192,190,0.36)", letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 10, color: "rgba(220,220,214,0.4)", letterSpacing: 0.5 }}>
               {hint}
             </div>
           )}

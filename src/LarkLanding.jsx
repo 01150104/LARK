@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import ImageSlot from "./components/ImageSlot";
 import ScrollNav from "./components/ScrollNav";
-import { THEME, HERO_IMG, CHAR_DATA, IN_GAME_SHOTS } from "./data/larkData";
+import { THEME, FONT_PIXEL, FONT_ARCADE, HERO_IMG, CHAR_DATA, IN_GAME_SHOTS } from "./data/larkData";
 
 const SECTIONS = [
   { id: "hero", label: "HOME" },
@@ -44,6 +44,16 @@ export default function LarkLanding() {
     return () => clearTimeout(t);
   }, [shotIdx]);
 
+  // preload every in-game screenshot up front so switching slides never
+  // has to wait on a fresh network fetch mid-crossfade (that stall is what
+  // reads as a "hitch" during the fade)
+  useEffect(() => {
+    IN_GAME_SHOTS.forEach((shot) => {
+      const img = new Image();
+      img.src = shot.img;
+    });
+  }, []);
+
   const { scrollYProgress: pageProgress } = useScroll();
   const { scrollYProgress: heroProgress } = useScroll({
     target: heroRef,
@@ -64,9 +74,9 @@ export default function LarkLanding() {
       style={{
         background: THEME.bg,
         color: THEME.ink,
-        fontFamily: "'Noto Serif JP', serif",
+        fontFamily: FONT_PIXEL,
         width: "100%",
-        overflowX: "hidden",
+        overflow: "hidden visible",
       }}
     >
       <GlobalStyle />
@@ -83,7 +93,7 @@ export default function LarkLanding() {
           height: 2,
           transformOrigin: "0% 50%",
           scaleX: pageProgress,
-          background: THEME.gold,
+          background: THEME.accent,
           zIndex: 100,
           opacity: 0.85,
         }}
@@ -102,19 +112,17 @@ export default function LarkLanding() {
           justifyContent: "space-between",
           padding: "0 clamp(20px, 4vw, 64px)",
           height: scrolled ? 64 : 92,
-          background: scrolled ? "rgba(7,5,5,0.72)" : "transparent",
-          backdropFilter: scrolled ? "blur(16px)" : "none",
-          borderBottom: `1px solid ${scrolled ? THEME.hairline : "transparent"}`,
-          transition: "all 0.45s ease",
+          background: scrolled ? THEME.bgDeep : "transparent",
+          borderBottom: `2px solid ${scrolled ? THEME.hairline : "transparent"}`,
+          transition: "all 0.3s ease",
         }}
       >
         <a href="#hero" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
           <span
             style={{
-              fontFamily: "'Cinzel', serif",
-              fontWeight: 600,
-              fontSize: 15,
-              letterSpacing: 5,
+              fontFamily: FONT_ARCADE,
+              fontSize: 14,
+              letterSpacing: 2,
               color: THEME.ink,
             }}
           >
@@ -142,30 +150,31 @@ export default function LarkLanding() {
           alignItems: "center",
           justifyContent: "center",
           padding: "140px 24px 90px",
-          background: `radial-gradient(ellipse 60% 50% at 50% 8%, rgba(205,168,106,0.10), transparent 65%), linear-gradient(180deg, ${THEME.bgDeep} 0%, ${THEME.bg} 55%, ${THEME.bgDeep} 100%)`,
+          background: `radial-gradient(ellipse 60% 50% at 50% 8%, rgba(200,48,60,0.14), transparent 65%), linear-gradient(180deg, ${THEME.bgDeep} 0%, ${THEME.bg} 55%, ${THEME.bgDeep} 100%)`,
           overflow: "hidden",
         }}
       >
         <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: 0.55,
-            background: "radial-gradient(ellipse 45% 35% at 25% 25%, rgba(205,168,106,0.08), transparent 70%)",
-            animation: "driftGlow 26s ease-in-out infinite",
-            pointerEvents: "none",
-          }}
-        />
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0.5,
+              background: "radial-gradient(ellipse 45% 35% at 25% 25%, rgba(200,48,60,0.10), transparent 70%)",
+              animation: "driftGlow 26s ease-in-out infinite",
+              pointerEvents: "none",
+            }}
+          />
         <div
           style={{
             position: "absolute",
             inset: 0,
-            opacity: 0.06,
+            opacity: 0.1,
             backgroundImage: "repeating-linear-gradient(0deg, #000 0px, transparent 1px, transparent 2px, #000 3px)",
             pointerEvents: "none",
           }}
         />
         <EmberParticles />
+        <FloatingSuits />
 
         <motion.div style={{ opacity: heroFade, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <motion.div
@@ -175,14 +184,14 @@ export default function LarkLanding() {
             style={{
               position: "relative",
               zIndex: 2,
-              fontFamily: "'Cinzel', serif",
-              fontSize: 11,
-              letterSpacing: 6,
-              color: THEME.gold,
+              fontFamily: FONT_PIXEL,
+              fontSize: 13,
+              letterSpacing: 3,
+              color: THEME.accent,
               textTransform: "uppercase",
             }}
           >
-A World Ruled by Probability
+            A World Ruled by Probability
           </motion.div>
 
           <div style={{ position: "relative", zIndex: 2, textAlign: "center", marginTop: 22, width: "100%" }}>
@@ -191,16 +200,13 @@ A World Ruled by Probability
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.1, delay: 0.15, ease: EASE }}
               style={{
-                fontFamily: "'Cinzel Decorative', 'Cinzel', serif",
-                fontWeight: 900,
-                fontSize: "clamp(64px, 13vw, 176px)",
-                lineHeight: 0.92,
-                letterSpacing: 4,
-                background: `linear-gradient(180deg, #fbf6ec 0%, ${THEME.gold} 55%, #7a5f34 100%)`,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                animation: "flicker 8s ease-in-out infinite",
+                fontFamily: FONT_ARCADE,
+                fontSize: "clamp(40px, 9vw, 108px)",
+                lineHeight: 1.1,
+                letterSpacing: 2,
+                color: THEME.ink,
+                textShadow: `3px 0 0 ${THEME.accent}, -3px 0 0 #2a8fa0`,
+                animation: "glitchFlicker 6s ease-in-out infinite",
               }}
             >
               LARK
@@ -210,14 +216,14 @@ A World Ruled by Probability
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.55 }}
               style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: "clamp(11px,1.6vw,14px)",
-                letterSpacing: 6,
+                fontFamily: FONT_PIXEL,
+                fontSize: "clamp(12px,1.6vw,15px)",
+                letterSpacing: 1,
                 color: THEME.muted,
                 marginTop: 16,
               }}
             >
-確率と運命の国フォルトゥナ — A Roguelike Roulette &amp; Dice Battle
+              確率と運命の国フォルトゥナ — A Roguelike Roulette &amp; Dice Battle
             </motion.div>
           </div>
 
@@ -236,7 +242,7 @@ A World Ruled by Probability
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, delay: 0.35, ease: EASE }}
           >
-            <div style={{ position: "relative" }}>
+            <div style={{ position: "relative", border: `3px solid ${THEME.ink}`, boxShadow: `0 0 0 3px ${THEME.bgDeep}, 0 0 0 5px ${THEME.accent}` }}>
               <ImageSlot
                 src={HERO_IMG}
                 alt="LARK main visual"
@@ -266,11 +272,11 @@ A World Ruled by Probability
             <motion.div
               variants={fadeUp}
               style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: "clamp(17px,2.2vw,22px)",
-                letterSpacing: 1,
-                color: THEME.ink,
-                fontWeight: 600,
+                fontFamily: FONT_PIXEL,
+                fontSize: "clamp(16px,2vw,20px)",
+                letterSpacing: 0.5,
+                color: THEME.accent,
+                fontWeight: 700,
                 marginBottom: 20,
               }}
             >
@@ -305,12 +311,12 @@ A World Ruled by Probability
               cursor: "pointer",
             }}
           >
-            <span style={{ fontFamily: "'Cinzel', serif", fontSize: 10, letterSpacing: 3 }}>SCROLL</span>
-            <span style={{ position: "relative", width: 1, height: 30, background: THEME.hairline, overflow: "hidden" }}>
+            <span style={{ fontFamily: FONT_ARCADE, fontSize: 9, letterSpacing: 1 }}>SCROLL</span>
+            <span style={{ position: "relative", width: 2, height: 30, background: THEME.hairline, overflow: "hidden" }}>
               <motion.span
                 animate={{ y: [-30, 30] }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                style={{ position: "absolute", left: -1, width: 3, height: 12, background: THEME.gold }}
+                style={{ position: "absolute", left: -1, width: 3, height: 12, background: THEME.accent }}
               />
             </span>
           </motion.a>
@@ -337,18 +343,53 @@ A World Ruled by Probability
               transition={{ duration: 0.8, ease: EASE }}
               style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(70%, 1400px)" }}
             >
-              <ImageSlot
-                src={selected.img}
-                alt={selected.name}
-                label={`FILE No. ${selected.fileNo}`}
-                accent={selected.accent}
-                fit={selected.stageFit || "cover"}
-                aspectRatio="auto"
-                radius={0}
-                style={{ height: "100%" }}
-                imgStyle={{
-                  objectPosition: selected.stagePosition || "center 12%",
-                  transform: selected.stageTransform,
+              {/* idle float + drop-shadow — reads as the character "standee"
+                  floating above the background rather than flat against it */}
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                style={{
+                  height: "100%",
+                  filter: "drop-shadow(-14px 26px 22px rgba(0,0,0,0.6)) drop-shadow(0 0 34px rgba(200,48,60,0.18))",
+                }}
+              >
+                <ImageSlot
+                  src={selected.img}
+                  alt={selected.name}
+                  label={`FILE No. ${selected.fileNo}`}
+                  accent={selected.accent}
+                  fit={selected.stageFit || "cover"}
+                  aspectRatio="auto"
+                  radius={0}
+                  style={{ height: "100%" }}
+                  imgStyle={{
+                    objectPosition: selected.stagePosition || "center 12%",
+                    transform: selected.stageTransform,
+                  }}
+                />
+              </motion.div>
+
+              {/* CRT static crawl + periodic signal-glitch streak */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  mixBlendMode: "overlay",
+                  opacity: 0.1,
+                  backgroundImage:
+                    "repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0px, transparent 1px, transparent 2px), repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0px, transparent 1px, transparent 3px)",
+                  backgroundSize: "3px 3px, 4px 4px",
+                  animation: "staticDrift 0.6s steps(3) infinite",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  background: `linear-gradient(100deg, transparent 42%, ${selected.accent}40 50%, transparent 58%)`,
+                  animation: "bgGlitchJitter 6.5s steps(1) infinite",
                 }}
               />
             </motion.div>
@@ -363,38 +404,46 @@ A World Ruled by Probability
               }}
             />
 
-            {/* single glass panel: header + story + avatar row, centered on the screen */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
+            {/* single glass panel: header + story + avatar row, centered on the screen.
+                positioning is a plain (unanimated) div so the entrance fade and the
+                continuous idle bob below don't have to fight a static translateY(-50%)
+                for control of `transform`. */}
+            <div
               style={{
                 position: "absolute",
                 left: "clamp(20px, 4vw, 64px)",
                 top: "50%",
                 transform: "translateY(-50%)",
                 width: "min(880px, 84vw)",
-                maxHeight: "calc(100dvh - 120px)",
-                overflowY: "auto",
                 zIndex: 2,
-                border: `1px solid ${THEME.hairline}`,
-                background: "rgba(9,7,7,0.55)",
-                backdropFilter: "blur(12px)",
               }}
             >
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1, ease: EASE }}>
+                {/* gentle continuous float — noticeable, but small enough that the
+                    story text stays comfortably readable while it drifts */}
+                <motion.div
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  style={{
+                    maxHeight: "calc(100dvh - 120px)",
+                    overflowY: "auto",
+                    border: `3px solid ${THEME.ink}`,
+                    boxShadow: `0 0 0 3px ${THEME.bgDeep}, 0 0 0 6px ${selected.accent}`,
+                    background: "#0a0a0a",
+                  }}
+                >
               {/* header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "20px 32px", background: "rgba(255,255,255,0.04)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "20px 32px", borderBottom: `2px solid ${THEME.hairline}` }}>
                 <span
                   style={{
                     width: 42,
                     height: 42,
-                    borderRadius: "50%",
-                    border: `1px solid ${selected.accent}`,
+                    border: `2px solid ${selected.accent}`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontFamily: "'Cinzel',serif",
-                    fontSize: 13,
+                    fontFamily: FONT_ARCADE,
+                    fontSize: 12,
                     color: selected.accent,
                     flexShrink: 0,
                   }}
@@ -402,19 +451,19 @@ A World Ruled by Probability
                   {selected.fileNo}
                 </span>
                 <div>
-                  <div style={{ fontFamily: "'Cinzel Decorative','Cinzel',serif", fontSize: "clamp(24px,3vw,32px)", fontWeight: 700, color: THEME.ink, lineHeight: 1.15 }}>
+                  <div style={{ fontFamily: FONT_PIXEL, fontSize: "clamp(22px,2.8vw,28px)", fontWeight: 700, color: THEME.ink, lineHeight: 1.3 }}>
                     {selected.name}
                   </div>
-                  <div style={{ fontSize: 13, color: THEME.muted, marginTop: 3 }}>{selected.role}</div>
+                  <div style={{ fontFamily: FONT_PIXEL, fontSize: 13, color: THEME.muted, marginTop: 3 }}>{selected.role}</div>
                 </div>
               </div>
 
               {/* story */}
-              <div style={{ padding: "22px 32px", background: "rgba(0,0,0,0.18)" }}>
-                <div style={{ fontFamily: "'Cinzel Decorative','Cinzel',serif", fontSize: "clamp(19px,2.4vw,23px)", letterSpacing: 2, color: selected.accent, opacity: 0.9, marginBottom: 12 }}>
-                  Story
+              <div style={{ padding: "22px 32px" }}>
+                <div style={{ fontFamily: FONT_ARCADE, fontSize: 13, letterSpacing: 1, color: selected.accent, marginBottom: 14 }}>
+                  STORY
                 </div>
-                <div style={{ fontSize: "clamp(13.5px,1.5vw,15px)", lineHeight: 1.85, color: THEME.muted, fontWeight: 300, marginBottom: 16 }}>{selected.desc}</div>
+                <div style={{ fontFamily: FONT_PIXEL, fontSize: "clamp(13.5px,1.5vw,15px)", lineHeight: 1.9, color: THEME.muted, marginBottom: 16 }}>{selected.desc}</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {selected.tags.map((tag, i) => (
                     <motion.div
@@ -423,13 +472,12 @@ A World Ruled by Probability
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.15 + i * 0.07, duration: 0.35 }}
                       style={{
-                        fontFamily: "'Cinzel',serif",
-                        fontSize: 10,
-                        letterSpacing: 1,
+                        fontFamily: FONT_PIXEL,
+                        fontSize: 11,
+                        letterSpacing: 0.5,
                         color: THEME.muted,
-                        border: `1px solid ${THEME.hairline}`,
+                        border: `2px solid ${THEME.hairline}`,
                         padding: "6px 14px",
-                        textTransform: "uppercase",
                       }}
                     >
                       {tag}
@@ -439,7 +487,7 @@ A World Ruled by Probability
               </div>
 
               {/* avatar row + prev/next, anchored to the bottom of the same panel */}
-              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 32px", borderTop: `1px solid ${THEME.hairline}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 32px", borderTop: `2px solid ${THEME.hairline}` }}>
                 <button
                   onClick={() => setSelectedIdx((selectedIdx - 1 + CHAR_DATA.length) % CHAR_DATA.length)}
                   style={{ background: "none", border: "none", color: THEME.muted, fontSize: 20, cursor: "pointer", padding: 4, flexShrink: 0 }}
@@ -493,7 +541,9 @@ A World Ruled by Probability
                   ›
                 </button>
               </div>
-            </motion.div>
+                </motion.div>
+              </motion.div>
+            </div>
           </motion.div>
         </AnimatePresence>
       </section>
@@ -505,26 +555,39 @@ A World Ruled by Probability
           position: "relative",
           padding: "clamp(90px,10vw,150px) clamp(20px,4vw,64px) 100px",
           background: THEME.bgDeep,
+          overflow: "hidden",
         }}
       >
+        <FloatingSuits />
         <SectionHeading eyebrow="IN-GAME" title="実際の画面より" />
 
         <div style={{ position: "relative", maxWidth: 1160, margin: "clamp(56px,6vw,80px) auto 0" }}>
-          <div style={{ position: "relative", border: `1px solid ${THEME.hairline}` }}>
-            <AnimatePresence mode="wait">
+          <div
+            style={{
+              position: "relative",
+              aspectRatio: "16 / 9",
+              border: `3px solid ${THEME.ink}`,
+              boxShadow: `0 0 0 3px ${THEME.bgDeep}, 0 0 0 6px ${THEME.accent}`,
+            }}
+          >
+            {/* both slides animate at once (no "wait" gap) so the crossfade
+                never shows a blank frame between them */}
+            <AnimatePresence>
               <motion.div
                 key={IN_GAME_SHOTS[shotIdx].no}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.6, ease: EASE }}
+                transition={{ duration: 0.5, ease: EASE }}
+                style={{ position: "absolute", inset: 0 }}
               >
                 <ImageSlot
                   src={IN_GAME_SHOTS[shotIdx].img}
                   alt={IN_GAME_SHOTS[shotIdx].caption}
                   label={`SCREEN ${IN_GAME_SHOTS[shotIdx].no}`}
-                  aspectRatio="16 / 9"
+                  aspectRatio="auto"
                   radius={0}
+                  style={{ height: "100%" }}
                 />
               </motion.div>
             </AnimatePresence>
@@ -539,12 +602,11 @@ A World Ruled by Probability
                 transform: "translateY(-50%)",
                 width: 40,
                 height: 40,
-                borderRadius: "50%",
-                border: `1px solid ${THEME.hairline}`,
-                background: "rgba(9,7,7,0.55)",
-                backdropFilter: "blur(8px)",
+                border: `2px solid ${THEME.ink}`,
+                background: THEME.bgDeep,
                 color: THEME.ink,
-                fontSize: 18,
+                fontFamily: FONT_ARCADE,
+                fontSize: 16,
                 cursor: "pointer",
               }}
             >
@@ -560,12 +622,11 @@ A World Ruled by Probability
                 transform: "translateY(-50%)",
                 width: 40,
                 height: 40,
-                borderRadius: "50%",
-                border: `1px solid ${THEME.hairline}`,
-                background: "rgba(9,7,7,0.55)",
-                backdropFilter: "blur(8px)",
+                border: `2px solid ${THEME.ink}`,
+                background: THEME.bgDeep,
                 color: THEME.ink,
-                fontSize: 18,
+                fontFamily: FONT_ARCADE,
+                fontSize: 16,
                 cursor: "pointer",
               }}
             >
@@ -579,8 +640,8 @@ A World Ruled by Probability
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{ fontSize: 13, color: THEME.muted, marginTop: 18, textAlign: "center" }}
+              transition={{ duration: 0.5 }}
+              style={{ fontFamily: FONT_PIXEL, fontSize: 13, color: THEME.muted, marginTop: 18, textAlign: "center" }}
             >
               {IN_GAME_SHOTS[shotIdx].caption}
             </motion.div>
@@ -593,13 +654,13 @@ A World Ruled by Probability
                 onClick={() => setShotIdx(idx)}
                 aria-label={`go to screen ${shot.no}`}
                 style={{
-                  width: idx === shotIdx ? 22 : 8,
-                  height: 8,
-                  borderRadius: 4,
+                  width: idx === shotIdx ? 22 : 10,
+                  height: 10,
+                  borderRadius: 0,
                   border: "none",
                   padding: 0,
                   cursor: "pointer",
-                  background: idx === shotIdx ? THEME.gold : THEME.hairline,
+                  background: idx === shotIdx ? THEME.accent : THEME.hairline,
                   transition: "all 0.3s ease",
                 }}
               />
@@ -614,10 +675,10 @@ A World Ruled by Probability
           transition={{ duration: 1 }}
           style={{ textAlign: "center", marginTop: "clamp(80px,10vw,120px)" }}
         >
-          <div style={{ fontFamily: "'Cinzel', serif", letterSpacing: 5, fontSize: 11, color: THEME.gold, opacity: 0.8 }}>
+          <div style={{ fontFamily: FONT_ARCADE, letterSpacing: 2, fontSize: 12, color: THEME.accent }}>
             ── LARK ──
           </div>
-          <div style={{ marginTop: 16, fontSize: 11.5, color: THEME.muted, opacity: 0.6 }}>
+          <div style={{ fontFamily: FONT_PIXEL, marginTop: 16, fontSize: 12, color: THEME.muted, opacity: 0.7 }}>
             © LARK Portfolio Project — ファンポートフォリオ用オリジナル作品
           </div>
         </motion.div>
@@ -653,14 +714,11 @@ function Opening({ onDone }) {
         transition={{ duration: 1.4, times: [0, 0.3, 0.7, 1], ease: EASE }}
         style={{
           position: "absolute",
-          fontFamily: "'Cinzel Decorative','Cinzel',serif",
-          fontWeight: 900,
-          fontSize: "clamp(56px, 10vw, 140px)",
-          letterSpacing: 4,
-          background: `linear-gradient(180deg, #fbf6ec 0%, ${THEME.gold} 55%, #7a5f34 100%)`,
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          WebkitTextFillColor: "transparent",
+          fontFamily: FONT_ARCADE,
+          fontSize: "clamp(40px, 8vw, 100px)",
+          letterSpacing: 2,
+          color: THEME.ink,
+          textShadow: `4px 0 0 ${THEME.accent}, -4px 0 0 #2a8fa0`,
         }}
       >
         LARK
@@ -678,9 +736,9 @@ function NavLink({ href, label }) {
       onMouseLeave={() => setHover(false)}
       style={{
         position: "relative",
-        fontFamily: "'Cinzel', serif",
-        fontSize: 11,
-        letterSpacing: 2,
+        fontFamily: FONT_ARCADE,
+        fontSize: 10,
+        letterSpacing: 1,
         color: hover ? THEME.ink : THEME.muted,
         textDecoration: "none",
         paddingBottom: 6,
@@ -695,7 +753,7 @@ function NavLink({ href, label }) {
           bottom: 0,
           height: 1,
           width: hover ? "100%" : "0%",
-          background: THEME.gold,
+          background: THEME.accent,
           transition: "width 0.3s ease",
         }}
       />
@@ -712,14 +770,14 @@ function SectionHeading({ eyebrow, title, compact = false }) {
       viewport={{ once: true, amount: 0.6 }}
       style={{ textAlign: "center" }}
     >
-      <motion.div variants={fadeUp} style={{ fontFamily: "'Cinzel', serif", letterSpacing: 5, fontSize: 11, color: THEME.gold, opacity: 0.85 }}>
+      <motion.div variants={fadeUp} style={{ fontFamily: FONT_ARCADE, letterSpacing: 1, fontSize: 12, color: THEME.accent }}>
         {eyebrow}
       </motion.div>
       <motion.div
         variants={fadeUp}
         style={{
-          fontFamily: "'Cinzel Decorative','Cinzel', serif",
-          fontSize: compact ? "clamp(24px,3.4vw,34px)" : "clamp(28px,4.4vw,44px)",
+          fontFamily: FONT_PIXEL,
+          fontSize: compact ? "clamp(22px,3vw,28px)" : "clamp(24px,3.6vw,34px)",
           fontWeight: 700,
           color: THEME.ink,
           marginTop: 12,
@@ -752,13 +810,43 @@ function EmberParticles() {
             position: "absolute",
             left: `${(i * 9.7) % 100}%`,
             bottom: `${(i * 13) % 60}%`,
-            width: 3,
-            height: 3,
-            borderRadius: "50%",
-            background: "#cda86a",
-            filter: "blur(1px)",
+            width: 4,
+            height: 4,
+            background: "#c8303c",
           }}
         />
+      ))}
+    </div>
+  );
+}
+
+function FloatingSuits() {
+  const suits = ["♥", "♠", "♦", "♣"];
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0.7, y: 0, x: 0 }}
+          animate={{ opacity: [0.7, 0.9, 0.7, 0.9], y: [0, -70, -150, -230], x: [0, i % 2 === 0 ? 16 : -16, 0, i % 2 === 0 ? -16 : 16] }}
+          transition={{
+            duration: 7 + (i % 4) * 1.5,
+            repeat: Infinity,
+            delay: i * 0.35,
+            ease: "easeInOut",
+          }}
+          style={{
+            position: "absolute",
+            left: `${(i * 19 + 6) % 100}%`,
+            bottom: `${(i * 23) % 65}%`,
+            fontSize: 12 + (i % 3) * 6,
+            color: "#e0303c",
+            lineHeight: 1,
+            textShadow: "0 0 8px rgba(224,48,60,0.6)",
+          }}
+        >
+          {suits[i % suits.length]}
+        </motion.span>
       ))}
     </div>
   );
@@ -773,11 +861,22 @@ function GlobalStyle() {
         50% { transform: translateX(3%) translateY(-2%); }
         100% { transform: translateX(-4%) translateY(0); }
       }
-      @keyframes flicker {
-        0%, 100% { opacity: 1; }
-        45% { opacity: 0.92; }
-        50% { opacity: 0.8; }
-        55% { opacity: 0.95; }
+      @keyframes glitchFlicker {
+        0%, 92%, 100% { text-shadow: 3px 0 0 #c8303c, -3px 0 0 #2a8fa0; transform: translate(0, 0); }
+        93% { text-shadow: -4px 1px 0 #c8303c, 4px -1px 0 #2a8fa0; transform: translate(-2px, 0); }
+        95% { text-shadow: 4px -1px 0 #c8303c, -4px 1px 0 #2a8fa0; transform: translate(2px, 0); }
+        97% { text-shadow: 3px 0 0 #c8303c, -3px 0 0 #2a8fa0; opacity: 0.75; }
+      }
+      @keyframes staticDrift {
+        0% { background-position: 0 0, 0 0; }
+        100% { background-position: 137px 71px, -83px 59px; }
+      }
+      @keyframes bgGlitchJitter {
+        0%, 93%, 100% { transform: translate(0, 0); opacity: 0; }
+        93.5% { transform: translate(8px, -3px); opacity: 0.6; }
+        94% { transform: translate(-6px, 2px); opacity: 0.4; }
+        94.5% { transform: translate(4px, -4px); opacity: 0.6; }
+        95% { transform: translate(0, 0); opacity: 0; }
       }
     `}</style>
   );

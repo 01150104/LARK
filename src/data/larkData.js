@@ -1,15 +1,18 @@
-// unified, restrained palette — one dark base, two accents (gold / crimson).
-// per-character "accent" is a muted hue used only for small tags/underlines,
-// never for large glows, so the whole site reads as one coherent system.
+// RPG Maker horror-game palette — near-black CRT background, high-contrast
+// off-white text, blood-red accent. Flat panels with solid pixel borders,
+// no blur/glassmorphism, no soft glow — everything reads as a game-menu window.
 export const THEME = {
-  bg: "#0b0809",
-  bgDeep: "#050404",
-  ink: "#f2ece9",
-  muted: "#9c8b8c",
-  hairline: "rgba(255,255,255,0.09)",
-  gold: "#cda86a",
-  crimson: "#9c3b4a",
+  bg: "#080808",
+  bgDeep: "#000000",
+  ink: "#e7e7e2",
+  muted: "#8f8f8a",
+  hairline: "rgba(231,231,226,0.25)",
+  accent: "#c8303c",
+  crimson: "#7a1620",
 };
+
+export const FONT_PIXEL = "'DotGothic16', sans-serif";
+export const FONT_ARCADE = "'Press Start 2P', 'DotGothic16', sans-serif";
 
 export const HERO_IMG = "/images/hero-main.png";
 
@@ -56,7 +59,8 @@ export const CHAR_DATA = [
 ];
 
 export const IN_GAME_SHOTS = [
-  { no: "01", caption: "インゲーム戦闘突入", img: "/images/ingame-01.png" },
+  { no: "01", caption: "戦闘モード", img: "/images/ingame-01.png" },
   { no: "02", caption: "アイテム選択", img: "/images/ingame-02.png" },
-  { no: "03", caption: "777カットイン", img: "/images/ingame-03.png" },
+  { no: "03", caption: "チャット画面", img: "/images/ingame-04.png" },
+  { no: "04", caption: "777カットイン", img: "/images/ingame-03.png" },
 ];

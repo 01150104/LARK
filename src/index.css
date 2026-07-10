@@ -20,34 +20,57 @@ body {
   padding: 0;
   width: 100%;
   min-height: 100%;
-  background: #030303;
+  background: #000;
 }
 
 #root {
   width: 100%;
   min-height: 100svh;
+  position: relative;
 }
 
 body {
-  overflow-x: hidden;
+  /* explicit two-value form — leaving overflow-y implicit here would let
+     the browser auto-compute it to "auto", which can turn body into its
+     own scroll container and break position:sticky further down the tree */
+  overflow: hidden visible;
 }
 
-/* custom scrollbar — hairline, single muted accent, no gradient */
+/* CRT scanlines — fixed over the whole viewport, purely decorative */
+#root::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.55) 0px,
+    rgba(0, 0, 0, 0.55) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+
+/* custom scrollbar — blocky, no rounding, high-contrast red */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #000;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(205, 168, 106, 0.35);
-  border-radius: 3px;
+  background: #c8303c;
+  border-radius: 0;
+  border: 2px solid #000;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(205, 168, 106, 0.55);
+  background: #e2454f;
 }
 
 ::selection {
-  background: rgba(205, 168, 106, 0.28);
-  color: #fff;
+  background: #c8303c;
+  color: #000;
 }
