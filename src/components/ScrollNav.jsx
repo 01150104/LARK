@@ -5,19 +5,24 @@ export default function ScrollNav({ sections }) {
   const [active, setActive] = useState(sections[0]?.id);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActive(entry.target.id);
-        });
-      },
-      { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
-    );
-    sections.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
+    // scroll-position based instead of IntersectionObserver — the hero
+    // section is position:fixed, so its intersection state never changes
+    // once observed, meaning an observer-based approach can never
+    // re-activate "HOME" after you scroll away from it and back
+    const onScroll = () => {
+      const mid = window.innerHeight * 0.5;
+      let current = sections[0]?.id;
+      for (const { id } of sections) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= mid) {
+          current = id;
+        }
+      }
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [sections]);
 
   return (
